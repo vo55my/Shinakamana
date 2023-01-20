@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Alpine JS Fetch API</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="container">
+  <table
+     x-data="quote" x-init="getQuote()"
+     class="table is-bordered bg-primary is-centered mt-6 mx-auto"
+  >
+    <thead>
+    <tr>
+      <th class="has-background-link-light has-text-link">Quotes</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td x-text="quote"></td>
+        </tr>
+    </tbody>
+  </table>
+  <script>
+    const quote = {
+    anime:"",
+    character:"",
+    quote:"",
+    getQuote(){
+      fetch("https://animechan.vercel.app/api/random")
+      .then(res=>res.json())
+      .then(data=>{
+        this.content = data.content
+        this.author = data.author
+      })
+    }
+  }
+  </script>
+</body>
+
+</html>
