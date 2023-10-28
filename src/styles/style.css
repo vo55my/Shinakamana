@@ -1,0 +1,135 @@
+@font-face {
+  font-family: exoplanetaria;
+  src: url(./font/Exoplanetaria.ttf);
+}
+
+@font-face {
+  font-family: tsuki;
+  src: url(./font/NineTsukiRegular.ttf);
+}
+
+body {
+  font-family: 'exoplanetaria';
+  background-image: url(../public/background/patternpad.svg);
+}
+
+.navbar,
+.offcanvas-body,
+.card-header {
+  background-color: #543864;
+}
+
+#gambar {
+  background-color: #FFBD69;
+}
+
+.offcanvas-title,
+.nav-link,
+.nav-link:hover,
+.nav-item,
+.btn-cari,
+.btn-cari:hover,
+.header,
+.judul,
+#logo,
+#item,
+#merah {
+  color: #FF6363;
+}
+
+.isi,
+.isi-link,
+.genre,
+.navbar-brand:hover,
+#item:hover,
+#deskripsi,
+#page:hover,
+#cream {
+  color: #FFBD69;
+}
+
+.info,
+.page-link:hover,
+.anime,
+#hitam {
+  color: #202040;
+}
+
+.info:hover,
+.isi-link:hover,
+.anime:hover {
+  color: #543864;
+}
+
+.navbar-toggler {
+  background-color: #FF6363;
+  color: #543864;
+}
+
+.cari,
+.cari:hover {
+  background-color: #202040;
+  color: #FF6363;
+}
+
+.navbar-brand {
+  font-family: 'tsuki';
+  font-size: xx-large;
+  color: #FF6363;
+}
+
+.card {
+  background-color: #FFBD69;
+  color: #202040;
+}
+
+.page-link,
+.hero:hover {
+  background-color: #543864;
+  color: #FF6363;
+}
+
+.hero {
+  background-color: #543864;
+  color: #FFBD69;
+}
+
+.offcanvas-header {
+  background-color: #202040;
+}
+
+#head {
+  padding-right: 20px;
+}
+
+#title {
+  padding-left: 25px;
+}
+
+#logo {
+  font-family: 'tsuki';
+}
+
+#mal {
+  width: 15rem;
+  height: 4rem;
+}
+
+.name {
+  margin-top: -40px;
+}
+
+@media (max-width: 576px) {
+  #image {
+    width: 83vw;
+  }
+
+  .judul, .isi {
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  #mal {
+    width: 83vw;
+  }
+}
