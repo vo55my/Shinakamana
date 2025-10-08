@@ -125,25 +125,6 @@ export default function PlaylistPage() {
               <p className="text-white/70 text-lg max-w-2xl">
                 Your personal collection of favorite anime
               </p>
-
-              {/* Storage Info */}
-              {storageInfo && (
-                <div className="mt-4 flex items-center space-x-2 px-4 py-2 bg-[#543864]/50 border border-[#543864] rounded-lg">
-                  <FiDatabase className="text-[#FFBD69]" />
-                  <span className="text-white/80 text-sm">
-                    Storage:{" "}
-                    <strong className="text-[#FF6363]">
-                      {storageInfo.active}
-                    </strong>
-                    {storageInfo.supported.length > 1 && (
-                      <span className="text-white/60">
-                        {" "}
-                        (Backup: {storageInfo.supported.slice(1).join(", ")})
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </section>
@@ -268,17 +249,6 @@ export default function PlaylistPage() {
                       </button>
                     </div>
                   ))}
-                </div>
-
-                {/* Playlist Info */}
-                <div className="mt-12 text-center">
-                  <div className="inline-flex items-center space-x-2 px-4 py-2 bg-[#543864] rounded-lg">
-                    <FiDatabase className="text-[#FFBD69]" />
-                    <span className="text-white/80 text-sm">
-                      Playlist saved with Composite Storage (
-                      {storageInfo?.active})
-                    </span>
-                  </div>
                 </div>
               </>
             )}
