@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnimeCard from "@/components/AnimeCard";
@@ -20,7 +20,8 @@ function uniqueByMalId(animeList) {
   });
 }
 
-export default function ResultPage() {
+// Komponen utama yang menggunakan useSearchParams
+function SearchResultContent() {
   const searchParams = useSearchParams();
   const [isClient, setIsClient] = useState(false);
 
@@ -61,7 +62,7 @@ export default function ResultPage() {
       start_date: params.get("start_date") || "",
       end_date: params.get("end_date") || "",
     });
-  }, [isClient]);
+  }, [isClient, searchParams]); // Tambahkan searchParams sebagai dependency
 
   // Fetch data berdasarkan parameter dan halaman
   useEffect(() => {
@@ -329,5 +330,71 @@ export default function ResultPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Loading component untuk Suspense
+function SearchResultLoading() {
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
+      <Navbar />
+      <main className="flex-1 py-20">
+        {/* Header Loading */}
+        <section className="relative py-12 bg-gradient-to-r from-[#0f0f1f] to-[#1a1a2f] border-b border-[#543864]">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center justify-center space-x-3 mb-4">
+                <div className="w-3 h-3 bg-[#FF6363] rounded-full"></div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-wide">
+                  SEARCH RESULTS
+                </h1>
+                <div className="w-3 h-3 bg-[#FFBD69] rounded-full"></div>
+              </div>
+              <div className="h-6 bg-[#543864]/50 rounded w-64 animate-pulse"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Controls Loading */}
+        <section className="py-8 bg-[#0f0f1f]">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
+              <div className="flex items-center space-x-3">
+                <FiFilter className="text-[#FF6363] text-lg" />
+                <div className="bg-[#1a1a2f] border border-[#543864] rounded-xl p-4 w-64">
+                  <div className="h-4 bg-[#543864]/50 rounded w-24 mb-2 animate-pulse"></div>
+                  <div className="flex gap-2">
+                    <div className="h-6 bg-[#543864]/50 rounded w-20 animate-pulse"></div>
+                    <div className="h-6 bg-[#543864]/50 rounded w-16 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="h-12 bg-[#543864]/50 rounded-xl animate-pulse w-48"></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Content Loading */}
+        <section className="py-8 bg-[#1a1a2f]">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 animate-pulse">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <AnimeCard key={i} loading />
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// Komponen utama dengan Suspense boundary
+export default function ResultPage() {
+  return (
+    <Suspense fallback={<SearchResultLoading />}>
+      <SearchResultContent />
+    </Suspense>
   );
 }
