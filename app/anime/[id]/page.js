@@ -12,6 +12,7 @@ import {
   getAnimeEpisodes,
   getAnimeRelations,
 } from "@/lib/api";
+import { playlistHelpers } from "@/lib/playlistHelpers";
 import {
   FiArrowLeft,
   FiChevronUp,
