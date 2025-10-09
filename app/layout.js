@@ -10,6 +10,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="id" suppressHydrationWarning>
+      <head>
+        <meta name="apple-mobile-web-app-title" content="Shinakamana" />
+      </head>
       <body className="bg-[#202040] text-white antialiased">{children}</body>
     </html>
   );
