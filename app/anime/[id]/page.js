@@ -268,7 +268,7 @@ export default function AnimeDetailPage() {
         {/* Header */}
         <section className="relative py-8 bg-gradient-to-r from-[#0f0f1f] to-[#1a1a2f] border-b border-[#543864]">
           <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 truncate">
               <button
                 onClick={() => router.back()}
                 className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a2f] border border-[#543864] hover:border-[#FF6363] text-white rounded-xl transition-all duration-300 hover:scale-105"
@@ -277,7 +277,7 @@ export default function AnimeDetailPage() {
                 <span className="font-semibold">BACK</span>
               </button>
               <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-black text-white truncate">
+                <h1 className="text-md sm:text-3xl font-black text-white">
                   {anime?.title ?? "ANIME DETAILS"}
                 </h1>
               </div>
