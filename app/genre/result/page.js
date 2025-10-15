@@ -1,13 +1,19 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import AnimeCard from "@/components/AnimeCard";
-import Pagination from "@/components/Pagination";
-import Dropdown from "@/components/Dropdown";
 import { getAnimeSearch, getAnimeGenres } from "@/lib/api";
+import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
+import AnimeCard from "@/components/cards/AnimeCard";
+import Pagination from "@/components/common/Pagination";
+import Dropdown from "@/components/common/Dropdown";
+import PageHeader from "@/components/common/PageHeader";
+import InfoSection from "@/components/info/InfoSection";
+import ResultInfo from "@/components/info/ResultInfo";
+import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import SSRLoadingFallback from "@/components/common/SSRLoadingFallback";
+import ResultLoading from "@/components/common/ResultLoading";
 import { FiTag } from "react-icons/fi";
 
 // Hapus duplikat berdasarkan mal_id
@@ -35,6 +41,8 @@ function GenreResultContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+
+  const [showScroll, setShowScroll] = useState(false);
 
   // Format genres untuk dropdown
   const genreOptions = allGenres.map((genre) => ({
@@ -147,17 +155,30 @@ function GenreResultContent() {
   const endIndex = startIndex + uniqueData.length - 1;
   const totalItems = pagination?.items?.total ?? 0;
 
+  // Scroll button
+  useEffect(() => {
+    let rafId = null;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        setShowScroll(window.scrollY > 400);
+        rafId = null;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   // Loading SSR fallback
   if (!isClient) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-white text-lg">Loading...</div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <SSRLoadingFallback />;
   }
 
   return (
@@ -166,24 +187,14 @@ function GenreResultContent() {
 
       <main className="flex-1 py-20">
         {/* Header Section */}
-        <section className="relative py-12 bg-gradient-to-r from-[#0f0f1f] to-[#1a1a2f] border-b border-[#543864]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col items-center text-center">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <div className="w-3 h-3 bg-[#FF6363] rounded-full"></div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-wide">
-                  GENRE RESULTS
-                </h1>
-                <div className="w-3 h-3 bg-[#FFBD69] rounded-full"></div>
-              </div>
-              <p className="text-white/70 text-lg max-w-2xl">
-                {genreName
-                  ? `Anime in ${genreName} genre`
-                  : "Browse anime by genre"}
-              </p>
-            </div>
-          </div>
-        </section>
+        <PageHeader
+          title="GENRE RESULTS"
+          subtitle={
+            genreName ? `Anime in ${genreName} genre` : "Browse anime by genre"
+          }
+          icon={<FiTag className="text-[#FF6363] text-2xl" />}
+          color="#FF6363"
+        />
 
         {/* Controls Section */}
         <section className="py-8 bg-[#0f0f1f]">
@@ -199,22 +210,13 @@ function GenreResultContent() {
                   onChange={handleGenreChange}
                 />
               </div>
-
               {/* Results Info */}
-              <div className="text-center lg:text-right">
-                <div className="text-white/70 text-sm font-medium">
-                  Showing{" "}
-                  <span className="text-[#FFBD69] font-bold">
-                    {startIndex}-{endIndex}
-                  </span>{" "}
-                  of{" "}
-                  <span className="text-[#FF6363] font-bold">{totalItems}</span>{" "}
-                  anime
-                </div>
-                <div className="text-white/40 text-xs mt-1 capitalize">
-                  {genreName ? `${genreName} Genre` : "All genres"}
-                </div>
-              </div>
+              <ResultInfo
+                startIndex={startIndex}
+                endIndex={endIndex}
+                totalItems={totalItems}
+                extra={genreName ? `${genreName} Genre` : "All genres"}
+              />
             </div>
           </div>
         </section>
@@ -286,74 +288,17 @@ function GenreResultContent() {
         </section>
 
         {/* Info Section */}
-        <section className="py-12 bg-gradient-to-r from-[#543864] to-[#1a1a2f]">
-          <div className="container mx-auto px-4 sm:px-6 text-center">
-            <div className="max-w-2xl mx-auto">
-              <FiTag className="text-[#FFBD69] text-3xl mx-auto mb-4" />
-              <h3 className="text-2xl font-black text-white mb-4">
-                GENRE BROWSING
-              </h3>
-              <p className="text-white/70 mb-6">
-                Explore anime organized by specific genres. From action-packed
-                adventures to heartwarming romances, discover new series that
-                match your preferences and find your next favorite anime.
-              </p>
-              <div className="text-white/40 text-sm">
-                Genre data provided by Jikan API • Updated regularly
-              </div>
-            </div>
-          </div>
-        </section>
+        <InfoSection
+          icon={<FiTag className="text-[#FFBD69] text-3xl mx-auto mb-4" />}
+          title="GENRE BROWSING"
+          description="Explore anime organized by specific genres. From action-packed adventures to heartwarming romances, discover new series that match your preferences and find your next favorite anime."
+          note="Genre data provided by Jikan API • Updated regularly"
+        />
       </main>
 
-      <Footer />
-    </div>
-  );
-}
+      {/* Scroll to top */}
+      <ScrollToTopButton show={showScroll} onClick={scrollToTop} />
 
-// Loading component untuk Suspense
-function GenreResultLoading() {
-  return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
-      <Navbar />
-      <main className="flex-1 py-20">
-        <section className="relative py-12 bg-gradient-to-r from-[#0f0f1f] to-[#1a1a2f] border-b border-[#543864]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col items-center text-center">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <div className="w-3 h-3 bg-[#FF6363] rounded-full"></div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-wide">
-                  GENRE RESULTS
-                </h1>
-                <div className="w-3 h-3 bg-[#FFBD69] rounded-full"></div>
-              </div>
-              <div className="h-6 bg-[#543864]/50 rounded w-64 animate-pulse"></div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-8 bg-[#0f0f1f]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
-              <div className="flex items-center space-x-3">
-                <FiTag className="text-[#FF6363] text-lg flex-shrink-0" />
-                <div className="w-64 h-12 bg-[#543864]/50 rounded-xl animate-pulse"></div>
-              </div>
-              <div className="h-12 bg-[#543864]/50 rounded-xl animate-pulse w-48"></div>
-            </div>
-          </div>
-        </section>
-
-        <section className="py-8 bg-[#1a1a2f]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 animate-pulse">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <AnimeCard key={i} loading />
-              ))}
-            </div>
-          </div>
-        </section>
-      </main>
       <Footer />
     </div>
   );
@@ -362,7 +307,14 @@ function GenreResultLoading() {
 // Komponen utama dengan Suspense boundary
 export default function GenreResultPage() {
   return (
-    <Suspense fallback={<GenreResultLoading />}>
+    <Suspense
+      fallback={
+        <ResultLoading
+          title="GENRES RESULTS"
+          icon={<FiTag className="text-[#FF6363] text-lg" />}
+        />
+      }
+    >
       <GenreResultContent />
     </Suspense>
   );

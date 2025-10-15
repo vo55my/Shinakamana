@@ -3,9 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Pagination from "@/components/Pagination";
 import {
   getAnimeFullById,
   getAnimeCharacters,
@@ -13,9 +10,16 @@ import {
   getAnimeRelations,
 } from "@/lib/api";
 import { playlistHelpers } from "@/lib/playlistHelpers";
+import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
+import Pagination from "@/components/common/Pagination";
+import TabNavigation from "@/components/anime/TabNavigation";
+import CharacterCard from "@/components/cards/CharacterCard";
+import EpisodeCard from "@/components/cards/EpisodeCard";
+import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import InfoSection from "@/components/info/InfoSection";
 import {
   FiArrowLeft,
-  FiChevronUp,
   FiStar,
   FiPlay,
   FiCalendar,
@@ -23,6 +27,7 @@ import {
   FiAward,
   FiCheck,
   FiPlus,
+  FiInfo,
 } from "react-icons/fi";
 
 export default function AnimeDetailPage() {
@@ -331,21 +336,11 @@ export default function AnimeDetailPage() {
             {/* Tabs */}
             <section className="py-6 bg-[#0f0f1f] border-b border-[#543864]">
               <div className="container mx-auto px-4 sm:px-6">
-                <div className="flex flex-wrap justify-center gap-2">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.key}
-                      onClick={() => handleTabChange(tab.key)}
-                      className={`px-6 py-3 font-bold rounded-xl transition-all duration-300 border ${
-                        activeTab === tab.key
-                          ? "bg-gradient-to-r from-[#FF6363] to-[#FFBD69] text-[#0f0f1f] border-transparent"
-                          : "bg-[#1a1a2f] border-[#543864] text-white/80 hover:text-white hover:border-[#FF6363]"
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
+                <TabNavigation
+                  tabs={tabs}
+                  activeTab={activeTab}
+                  onTabChange={handleTabChange}
+                />
               </div>
             </section>
 
@@ -694,48 +689,14 @@ export default function AnimeDetailPage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        {characters.map((ch, idx) => {
-                          const char = ch?.character ?? {};
-                          const img = char?.images?.jpg?.image_url;
-                          const key = char?.mal_id ?? `ch-${idx}`;
-                          return (
-                            <div
-                              key={key}
-                              className="bg-[#0f0f1f] border border-[#543864] rounded-xl p-4 hover:border-[#FF6363] transition-all duration-300"
-                            >
-                              <div className="flex items-center space-x-4">
-                                <div className="relative w-16 h-16 flex-shrink-0 rounded-full overflow-hidden border-2 border-[#FFBD69]">
-                                  {img ? (
-                                    <Image
-                                      src={img}
-                                      alt={char.name ?? "character"}
-                                      fill
-                                      className="object-cover"
-                                      sizes="64px"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-[#543864] text-white/40 text-xs">
-                                      No Image
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="text-white font-bold text-lg">
-                                    {char.name ?? "Unknown"}
-                                  </h4>
-                                  <p className="text-[#FFBD69] text-sm font-medium">
-                                    {ch?.role ?? "Unknown role"}
-                                  </p>
-                                  {ch.voice_actors?.length > 0 && (
-                                    <p className="text-white/60 text-xs mt-1">
-                                      VA: {ch.voice_actors[0]?.person?.name}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                        {characters.map((ch, idx) => (
+                          <CharacterCard
+                            key={ch?.character?.mal_id ?? `ch-${idx}`}
+                            character={ch?.character}
+                            role={ch?.role}
+                            va={ch.voice_actors?.[0]?.person?.name}
+                          />
+                        ))}
                       </div>
                     )}
 
@@ -775,30 +736,14 @@ export default function AnimeDetailPage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                        {episodes.map((ep, idx) => {
-                          const key = ep?.mal_id ?? `ep-${idx}`;
-
-                          // Hitung nomor episode global (1 page = 100 data)
-                          const absoluteIndex =
-                            (episodesPage - 1) * 100 + (idx + 1);
-
-                          return (
-                            <div
-                              key={key}
-                              className="bg-[#0f0f1f] border border-[#543864] rounded-xl p-4 hover:border-[#FFBD69] transition-all duration-300"
-                            >
-                              <div className="text-[#FF6363] font-bold text-sm mb-2">
-                                EPISODE {absoluteIndex}
-                              </div>
-                              <h4 className="text-white font-semibold mb-2 line-clamp-2">
-                                {ep?.title ?? `Episode ${absoluteIndex}`}
-                              </h4>
-                              <p className="text-white/60 text-xs">
-                                Aired: {formatEpisodeDate(ep?.aired)}
-                              </p>
-                            </div>
-                          );
-                        })}
+                        {episodes.map((ep, idx) => (
+                          <EpisodeCard
+                            key={ep?.mal_id ?? `ep-${idx}`}
+                            episode={ep}
+                            index={(episodesPage - 1) * 100 + (idx + 1)}
+                            aired={formatEpisodeDate(ep?.aired)}
+                          />
+                        ))}
                       </div>
                     )}
 
@@ -819,20 +764,20 @@ export default function AnimeDetailPage() {
                 </div>
               </section>
             )}
+
+            {/* Info Section */}
+            <InfoSection
+              icon={<FiInfo className="text-[#FFBD69] text-3xl mx-auto mb-4" />}
+              title="ANIME DETAILS"
+              description="Find detailed information about your favorite anime, including synopsis, background, characters, episodes, and more. All data is provided by Jikan API."
+              note="Data updated regularly from Jikan API"
+            />
           </>
         )}
       </main>
 
       {/* Scroll to top */}
-      {showScroll && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 bg-gradient-to-r from-[#FF6363] to-[#FFBD69] text-[#0f0f1f] p-3 rounded-xl shadow-2xl hover:scale-110 transition-all duration-300 z-50"
-          aria-label="Scroll to top"
-        >
-          <FiChevronUp size={20} />
-        </button>
-      )}
+      <ScrollToTopButton show={showScroll} onClick={scrollToTop} />
 
       <Footer />
     </div>
@@ -844,7 +789,7 @@ function InfoRow({ label, value }) {
   if (!value || value === "N/A") return null;
 
   return (
-    <div className="flex justify-between items-center py-2 border-b border-[#543864]/50">
+    <div className="flex justify-between items-center py-2 gap-8 border-b border-[#543864]/50">
       <span className="text-white/70 font-medium">{label}</span>
       <span className="text-white font-semibold text-right">{value}</span>
     </div>

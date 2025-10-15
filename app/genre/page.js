@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { getAnimeGenres } from "@/lib/api";
+import Navbar from "@/components/common/Navbar";
+import Footer from "@/components/common/Footer";
+import GenreButton from "@/components/buttons/GenreButton";
+import PageHeader from "@/components/common/PageHeader";
+import InfoSection from "@/components/info/InfoSection";
+import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import SSRLoadingFallback from "@/components/common/SSRLoadingFallback";
 import { FiTag, FiGrid } from "react-icons/fi";
 
 export default function GenrePage() {
@@ -13,6 +18,7 @@ export default function GenrePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
+  const [showScroll, setShowScroll] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -53,16 +59,29 @@ export default function GenrePage() {
     router.push(`/genre/result?${params.toString()}`);
   };
 
+  // Scroll button
+  useEffect(() => {
+    let rafId = null;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        setShowScroll(window.scrollY > 400);
+        rafId = null;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   if (!isClient) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-white text-lg">Loading...</div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <SSRLoadingFallback />;
   }
 
   return (
@@ -71,23 +90,12 @@ export default function GenrePage() {
 
       <main className="flex-1 py-20">
         {/* Header Section */}
-        <section className="relative py-12 bg-gradient-to-r from-[#0f0f1f] to-[#1a1a2f] border-b border-[#543864]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col items-center text-center">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <div className="w-3 h-3 bg-[#FF6363] rounded-full"></div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-wide">
-                  BROWSE GENRES
-                </h1>
-                <div className="w-3 h-3 bg-[#FFBD69] rounded-full"></div>
-              </div>
-              <p className="text-white/70 text-lg max-w-2xl">
-                Discover {allGenres.length} anime genres, themes, and
-                demographics
-              </p>
-            </div>
-          </div>
-        </section>
+        <PageHeader
+          title="BROWSE GENRES"
+          subtitle={`Discover ${allGenres.length} anime genres, themes, and demographics`}
+          icon={<FiTag className="text-[#FF6363] text-2xl" />}
+          color="#FF6363"
+        />
 
         {/* Content Section */}
         <section className="py-12 bg-[#1a1a2f]">
@@ -121,21 +129,14 @@ export default function GenrePage() {
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   {allGenres.map((g) => (
-                    <button
+                    <GenreButton
                       key={g.mal_id}
+                      name={g.name}
+                      count={g.count}
                       onClick={() => handleGenreClick(g.mal_id, g.name)}
-                      className="bg-gradient-to-r from-[#543864] to-[#1a1a2f] border border-[#543864] text-white p-4 rounded-xl hover:border-[#FFBD69] hover:scale-105 transition-all duration-300 text-center group"
-                    >
-                      <FiTag className="text-[#FFBD69] text-lg mx-auto mb-2 group-hover:scale-110 transition-transform duration-300" />
-                      <div className="font-semibold text-sm md:text-base">
-                        {g.name}
-                      </div>
-                      <div className="text-white/60 text-xs mt-1">
-                        {g.count || 0} anime
-                      </div>
-                    </button>
+                    />
                   ))}
                 </div>
               </div>
@@ -144,26 +145,16 @@ export default function GenrePage() {
         </section>
 
         {/* Info Section */}
-        <section className="py-12 bg-gradient-to-r from-[#543864] to-[#1a1a2f]">
-          <div className="container mx-auto px-4 sm:px-6 text-center">
-            <div className="max-w-2xl mx-auto">
-              <FiTag className="text-[#FFBD69] text-3xl mx-auto mb-4" />
-              <h3 className="text-2xl font-black text-white mb-4">
-                ANIME GENRES
-              </h3>
-              <p className="text-white/70 mb-6">
-                Explore thousands of anime organized by genre, theme, and
-                demographic. From action-packed adventures to heartwarming
-                romances, find exactly what you&apos;re looking for with our
-                comprehensive genre catalog.
-              </p>
-              <div className="text-white/40 text-sm">
-                Genre data provided by Jikan API • Updated regularly
-              </div>
-            </div>
-          </div>
-        </section>
+        <InfoSection
+          icon={<FiTag className="text-[#FFBD69] text-3xl mx-auto mb-4" />}
+          title="ANIME GENRES"
+          description="Explore thousands of anime organized by genre, theme, and demographic. From action-packed adventures to heartwarming romances, find exactly what you're looking for with our comprehensive genre catalog."
+          note="Genre data provided by Jikan API • Updated regularly"
+        />
       </main>
+
+      {/* Scroll to top */}
+      <ScrollToTopButton show={showScroll} onClick={scrollToTop} />
 
       <Footer />
     </div>
