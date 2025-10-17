@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
+import { useParams } from "next/navigation";
 import {
   getAnimeFullById,
   getAnimeCharacters,
@@ -12,27 +11,19 @@ import {
 import { playlistHelpers } from "@/lib/playlistHelpers";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
-import Pagination from "@/components/common/Pagination";
-import TabNavigation from "@/components/anime/TabNavigation";
-import CharacterCard from "@/components/cards/CharacterCard";
-import EpisodeCard from "@/components/cards/EpisodeCard";
-import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import ScrollToTopButton from "@/components/buttons/ScrollToTopButton";
 import InfoSection from "@/components/info/InfoSection";
-import {
-  FiArrowLeft,
-  FiStar,
-  FiPlay,
-  FiCalendar,
-  FiUsers,
-  FiAward,
-  FiCheck,
-  FiPlus,
-  FiInfo,
-} from "react-icons/fi";
+import LoadingState from "@/components/state/LoadingState";
+import ErrorState from "@/components/state/ErrorState";
+import TabNavigation from "@/components/section/anime/TabNavigation";
+import AnimeDetailHeader from "@/components/section/anime/AnimeDetailHeader";
+import AnimeInfoTab from "@/components/section/anime/AnimeInfoTab";
+import AnimeCharactersTab from "@/components/section/anime/AnimeCharactersTab";
+import AnimeEpisodesTab from "@/components/section/anime/AnimeEpisodesTab";
+import { FiInfo } from "react-icons/fi";
 
 export default function AnimeDetailPage() {
   const { id } = useParams();
-  const router = useRouter();
 
   const [anime, setAnime] = useState(null);
   const [relations, setRelations] = useState([]);
@@ -48,14 +39,14 @@ export default function AnimeDetailPage() {
     { key: "episodes", label: "EPISODES" },
   ];
 
-  // Local pagination states for characters (kept)
+  // Local pagination states for characters
   const [allCharacters, setAllCharacters] = useState([]);
   const [characters, setCharacters] = useState([]);
   const [charactersPage, setCharactersPage] = useState(1);
   const [charactersPagination, setCharactersPagination] = useState(null);
   const [charactersLoading, setCharactersLoading] = useState(false);
 
-  // Episodes: server-side pagination (no more allEpisodes slice)
+  // Episodes: server-side pagination
   const [episodes, setEpisodes] = useState([]);
   const [episodesPage, setEpisodesPage] = useState(1);
   const [episodesPagination, setEpisodesPagination] = useState(null);
@@ -130,13 +121,13 @@ export default function AnimeDetailPage() {
     fetchAnimeData();
   }, [id]);
 
-  // Reset pagination page when id changes (avoid stale page)
+  // Reset pagination page when id changes
   useEffect(() => {
     setCharactersPage(1);
     setEpisodesPage(1);
   }, [id]);
 
-  // Fetch relations (no pagination)
+  // Fetch relations
   useEffect(() => {
     if (!id) return;
     async function fetchRelations() {
@@ -271,64 +262,13 @@ export default function AnimeDetailPage() {
 
       <main className="flex-1 py-20">
         {/* Header */}
-        <section className="relative py-8 bg-gradient-to-r from-[#0f0f1f] to-[#1a1a2f] border-b border-[#543864]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex items-center space-x-4 truncate">
-              <button
-                onClick={() => router.back()}
-                className="flex items-center space-x-2 px-4 py-2 bg-[#1a1a2f] border border-[#543864] hover:border-[#FF6363] text-white rounded-xl transition-all duration-300 hover:scale-105"
-              >
-                <FiArrowLeft size={18} />
-                <span className="font-semibold">BACK</span>
-              </button>
-              <div className="flex-1">
-                <h1 className="text-md sm:text-3xl font-black text-white">
-                  {anime?.title ?? "ANIME DETAILS"}
-                </h1>
-              </div>
-            </div>
-          </div>
-        </section>
+        <AnimeDetailHeader anime={anime} />
 
         {/* Loading State */}
-        {loading && !error && (
-          <section className="py-12">
-            <div className="container mx-auto px-4 sm:px-6">
-              <div className="bg-[#1a1a2f] border border-[#543864] rounded-2xl p-8 animate-pulse">
-                <div className="flex flex-col md:flex-row gap-8">
-                  <div className="w-full md:w-80 h-96 bg-[#543864]/50 rounded-xl"></div>
-                  <div className="flex-1 space-y-4">
-                    <div className="h-8 bg-[#543864]/50 rounded w-3/4"></div>
-                    <div className="h-4 bg-[#543864]/50 rounded w-1/2"></div>
-                    <div className="h-4 bg-[#543864]/50 rounded w-2/3"></div>
-                    <div className="grid grid-cols-2 gap-4 mt-6">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="h-4 bg-[#543864]/50 rounded"
-                        ></div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
+        {loading && !error && <LoadingState />}
 
         {/* Error State */}
-        {error && (
-          <section className="py-12">
-            <div className="container mx-auto px-4 sm:px-6">
-              <div className="bg-[#1a1a2f] border border-[#543864] rounded-2xl p-8 text-center">
-                <div className="text-[#FF6363] text-lg font-semibold mb-2">
-                  {error}
-                </div>
-                <p className="text-white/60">Please try refreshing the page</p>
-              </div>
-            </div>
-          </section>
-        )}
+        {error && <ErrorState error={error} />}
 
         {/* Content - Only show when not loading and no error */}
         {!loading && !error && anime && (
@@ -346,423 +286,36 @@ export default function AnimeDetailPage() {
 
             {/* === INFORMATION TAB === */}
             {activeTab === "info" && (
-              <section className="py-12">
-                <div className="container mx-auto px-4 sm:px-6">
-                  <div className="bg-[#1a1a2f] border border-[#543864] rounded-2xl overflow-hidden">
-                    {/* Hero Section */}
-                    <div className="flex flex-col lg:flex-row gap-8 p-6 md:p-8">
-                      {/* Left: Image & Trailer */}
-                      <div className="flex-shrink-0 w-full lg:w-80 space-y-6">
-                        {/* Main Image */}
-                        <div className="relative w-full h-96 lg:h-[420px] rounded-xl overflow-hidden border-2 border-[#543864]">
-                          {anime.images?.jpg?.large_image_url ? (
-                            <Image
-                              src={anime.images.jpg.large_image_url}
-                              alt={anime.title || "Anime image"}
-                              fill
-                              sizes="(max-width: 1024px) 100vw, 320px"
-                              className="object-cover"
-                              priority
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-[#543864]/50 text-white/40">
-                              No Image
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Trailer */}
-                        {anime.trailer?.embed_url && (
-                          <div className="aspect-video w-full rounded-xl overflow-hidden border border-[#543864]">
-                            <iframe
-                              src={anime.trailer.embed_url}
-                              title={`${anime.title} - Trailer`}
-                              className="w-full h-full"
-                              allowFullScreen
-                            />
-                          </div>
-                        )}
-
-                        {/* Add to Playlist Button */}
-                        <div className="flex justify-center mt-4">
-                          <button
-                            onClick={handleAddToPlaylist}
-                            disabled={isPlaylistLoading}
-                            className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
-                              isInPlaylist
-                                ? "bg-[#FF6363] text-white hover:bg-[#ff5252]"
-                                : "bg-[#543864] text-white hover:bg-[#4a3157]"
-                            } ${
-                              isPlaylistLoading
-                                ? "opacity-50 cursor-not-allowed"
-                                : "hover:scale-105"
-                            }`}
-                          >
-                            {isPlaylistLoading ? (
-                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : isInPlaylist ? (
-                              <>
-                                <FiCheck className="text-lg" />
-                                <span>In Playlist</span>
-                              </>
-                            ) : (
-                              <>
-                                <FiPlus className="text-lg" />
-                                <span>Add to Playlist</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Right: Details */}
-                      <div className="flex-1 space-y-6">
-                        {/* Title & Basic Info */}
-                        <div>
-                          <h2 className="text-3xl md:text-4xl font-black text-white mb-2 leading-tight">
-                            {anime.title}
-                          </h2>
-                          <div className="flex flex-wrap items-center gap-4 text-white/60 mb-4">
-                            {anime.title_english && (
-                              <span className="text-lg">
-                                {anime.title_english}
-                              </span>
-                            )}
-                            {anime.title_japanese && (
-                              <span className="text-sm">
-                                ({anime.title_japanese})
-                              </span>
-                            )}
-                            {anime.year && (
-                              <span className="text-[#FFBD69] font-semibold">
-                                ({anime.year})
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Stats Grid */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            {anime.score && (
-                              <div className="bg-[#543864] rounded-xl p-4 text-center border border-[#543864] hover:border-[#FFBD69] transition-colors duration-300">
-                                <FiStar className="text-[#FFBD69] text-xl mx-auto mb-2" />
-                                <div className="text-white font-bold text-lg">
-                                  {anime.score}
-                                </div>
-                                <div className="text-white/60 text-sm">
-                                  SCORE
-                                </div>
-                              </div>
-                            )}
-                            {anime.rank && (
-                              <div className="bg-[#543864] rounded-xl p-4 text-center border border-[#543864] hover:border-[#FF6363] transition-colors duration-300">
-                                <FiAward className="text-[#FF6363] text-xl mx-auto mb-2" />
-                                <div className="text-white font-bold text-lg">
-                                  #{anime.rank}
-                                </div>
-                                <div className="text-white/60 text-sm">
-                                  RANK
-                                </div>
-                              </div>
-                            )}
-                            {anime.popularity && (
-                              <div className="bg-[#543864] rounded-xl p-4 text-center border border-[#543864] hover:border-[#FFBD69] transition-colors duration-300">
-                                <FiUsers className="text-[#FFBD69] text-xl mx-auto mb-2" />
-                                <div className="text-white font-bold text-lg">
-                                  #{anime.popularity}
-                                </div>
-                                <div className="text-white/60 text-sm">
-                                  POPULARITY
-                                </div>
-                              </div>
-                            )}
-                            {anime.episodes && (
-                              <div className="bg-[#543864] rounded-xl p-4 text-center border border-[#543864] hover:border-[#FF6363] transition-colors duration-300">
-                                <FiPlay className="text-[#FF6363] text-xl mx-auto mb-2" />
-                                <div className="text-white font-bold text-lg">
-                                  {anime.episodes}
-                                </div>
-                                <div className="text-white/60 text-sm">
-                                  EPISODES
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Synopsis */}
-                        {anime.synopsis && (
-                          <div className="bg-[#0f0f1f] rounded-xl p-6 border border-[#543864]">
-                            <h3 className="text-xl font-black text-white mb-4 flex items-center">
-                              <FiPlay className="text-[#FF6363] mr-2" />
-                              SYNOPSIS
-                            </h3>
-                            <p className="text-white/80 leading-relaxed">
-                              {anime.synopsis}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Background */}
-                        {anime.background && (
-                          <div className="bg-[#0f0f1f] rounded-xl p-6 border border-[#543864]">
-                            <h3 className="text-xl font-black text-white mb-4">
-                              BACKGROUND
-                            </h3>
-                            <p className="text-white/80 leading-relaxed">
-                              {anime.background}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Additional Information */}
-                    <div className="border-t border-[#543864] p-6 md:p-8">
-                      <h3 className="text-2xl font-black text-white mb-6 flex items-center">
-                        <FiCalendar className="text-[#FFBD69] mr-2" />
-                        ADDITIONAL INFORMATION
-                      </h3>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* Basic Info */}
-                        <div className="space-y-3">
-                          <h4 className="text-[#FFBD69] font-bold text-lg">
-                            BASIC INFO
-                          </h4>
-                          <InfoRow label="Type" value={anime.type} />
-                          <InfoRow label="Source" value={anime.source} />
-                          <InfoRow label="Status" value={anime.status} />
-                          <InfoRow label="Duration" value={anime.duration} />
-                          <InfoRow label="Rating" value={anime.rating} />
-                        </div>
-
-                        {/* Broadcast Info */}
-                        <div className="space-y-3">
-                          <h4 className="text-[#FFBD69] font-bold text-lg">
-                            BROADCAST
-                          </h4>
-                          <InfoRow label="Aired" value={anime.aired?.string} />
-                          <InfoRow
-                            label="Broadcast"
-                            value={anime.broadcast?.string}
-                          />
-                          <InfoRow label="Season" value={anime.season} />
-                          <InfoRow label="Year" value={anime.year} />
-                        </div>
-
-                        {/* Production */}
-                        <div className="space-y-3">
-                          <h4 className="text-[#FFBD69] font-bold text-lg">
-                            PRODUCTION
-                          </h4>
-                          <InfoRow
-                            label="Studios"
-                            value={anime.studios?.map((s) => s.name).join(", ")}
-                          />
-                          <InfoRow
-                            label="Producers"
-                            value={anime.producers
-                              ?.map((p) => p.name)
-                              .join(", ")}
-                          />
-                          <InfoRow
-                            label="Licensors"
-                            value={anime.licensors
-                              ?.map((l) => l.name)
-                              .join(", ")}
-                          />
-                          <InfoRow
-                            label="Genres"
-                            value={anime.genres?.map((g) => g.name).join(", ")}
-                          />
-                          <InfoRow
-                            label="Themes"
-                            value={anime.themes?.map((t) => t.name).join(", ")}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Streaming Platforms */}
-                      {anime.streaming?.length > 0 && (
-                        <div className="mt-8">
-                          <h4 className="text-[#FFBD69] font-bold text-lg mb-4">
-                            STREAMING PLATFORMS
-                          </h4>
-                          <div className="flex flex-wrap gap-3">
-                            {anime.streaming.map((s, i) => (
-                              <a
-                                key={s.url ?? i}
-                                href={s.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-gradient-to-r from-[#FF6363] to-[#FFBD69] text-[#0f0f1f] font-bold px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 border-2 border-transparent"
-                              >
-                                {s.name}
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Theme Songs */}
-                      {anime.theme && (
-                        <div className="mt-8 grid md:grid-cols-2 gap-6">
-                          {anime.theme.openings?.length > 0 && (
-                            <div>
-                              <h4 className="text-[#FF6363] font-bold text-lg mb-3">
-                                OPENING THEMES
-                              </h4>
-                              <ul className="space-y-2">
-                                {anime.theme.openings.map((op, i) => (
-                                  <li key={i} className="text-white/80 text-sm">
-                                    🎵 {op}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                          {anime.theme.endings?.length > 0 && (
-                            <div>
-                              <h4 className="text-[#FFBD69] font-bold text-lg mb-3">
-                                ENDING THEMES
-                              </h4>
-                              <ul className="space-y-2">
-                                {anime.theme.endings.map((ed, i) => (
-                                  <li key={i} className="text-white/80 text-sm">
-                                    🎵 {ed}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Relations */}
-                      {relations.length > 0 && (
-                        <div className="mt-8">
-                          <h4 className="text-[#FFBD69] font-bold text-lg mb-4">
-                            RELATIONS
-                          </h4>
-                          <div className="space-y-3">
-                            {relations.map((rel, i) => (
-                              <div
-                                key={i}
-                                className="bg-[#0f0f1f] rounded-lg p-4 border border-[#543864]"
-                              >
-                                <span className="text-[#FF6363] font-semibold">
-                                  {rel.relation}:
-                                </span>
-                                <span className="text-white/80 ml-2">
-                                  {(rel.entry || [])
-                                    .map((e) => e.name)
-                                    .join(", ")}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </section>
+              <AnimeInfoTab
+                anime={anime}
+                relations={relations}
+                isInPlaylist={isInPlaylist}
+                isPlaylistLoading={isPlaylistLoading}
+                onAddToPlaylist={handleAddToPlaylist}
+              />
             )}
 
             {/* === CHARACTERS TAB === */}
             {activeTab === "characters" && (
-              <section className="py-12">
-                <div className="container mx-auto px-4 sm:px-6">
-                  <div className="bg-[#1a1a2f] border border-[#543864] rounded-2xl p-6 md:p-8">
-                    <h3 className="text-2xl font-black text-white mb-6">
-                      CHARACTERS & VOICE ACTORS
-                    </h3>
-
-                    {charactersLoading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {Array.from({ length: 10 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="h-24 bg-[#543864]/40 rounded-xl animate-pulse"
-                          ></div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        {characters.map((ch, idx) => (
-                          <CharacterCard
-                            key={ch?.character?.mal_id ?? `ch-${idx}`}
-                            character={ch?.character}
-                            role={ch?.role}
-                            va={ch.voice_actors?.[0]?.person?.name}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {charactersPagination &&
-                      charactersPagination.last_visible_page > 1 && (
-                        <div className="flex justify-center">
-                          <Pagination
-                            currentPage={charactersPage}
-                            totalPages={charactersPagination.last_visible_page}
-                            onPageChange={setCharactersPage}
-                            loading={charactersLoading}
-                          />
-                        </div>
-                      )}
-                  </div>
-                </div>
-              </section>
+              <AnimeCharactersTab
+                characters={characters}
+                charactersLoading={charactersLoading}
+                charactersPagination={charactersPagination}
+                charactersPage={charactersPage}
+                onPageChange={setCharactersPage}
+              />
             )}
 
             {/* === EPISODES TAB === */}
             {activeTab === "episodes" && (
-              <section className="py-12">
-                <div className="container mx-auto px-4 sm:px-6">
-                  <div className="bg-[#1a1a2f] border border-[#543864] rounded-2xl p-6 md:p-8">
-                    <h3 className="text-2xl font-black text-white mb-6">
-                      EPISODES
-                    </h3>
-
-                    {episodesLoading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className="h-28 bg-[#543864]/40 rounded-xl animate-pulse"
-                          ></div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                        {episodes.map((ep, idx) => (
-                          <EpisodeCard
-                            key={ep?.mal_id ?? `ep-${idx}`}
-                            episode={ep}
-                            index={(episodesPage - 1) * 100 + (idx + 1)}
-                            aired={formatEpisodeDate(ep?.aired)}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {episodesPagination &&
-                      (episodesPagination.last_visible_page ?? 0) > 1 && (
-                        <div className="flex justify-center">
-                          <Pagination
-                            currentPage={
-                              episodesPagination.current_page ?? episodesPage
-                            }
-                            totalPages={episodesPagination.last_visible_page}
-                            onPageChange={(p) => setEpisodesPage(p)}
-                            loading={episodesLoading}
-                          />
-                        </div>
-                      )}
-                  </div>
-                </div>
-              </section>
+              <AnimeEpisodesTab
+                episodes={episodes}
+                episodesLoading={episodesLoading}
+                episodesPagination={episodesPagination}
+                episodesPage={episodesPage}
+                onPageChange={setEpisodesPage}
+                formatEpisodeDate={formatEpisodeDate}
+              />
             )}
 
             {/* Info Section */}
@@ -780,18 +333,6 @@ export default function AnimeDetailPage() {
       <ScrollToTopButton show={showScroll} onClick={scrollToTop} />
 
       <Footer />
-    </div>
-  );
-}
-
-// Helper component for info rows
-function InfoRow({ label, value }) {
-  if (!value || value === "N/A") return null;
-
-  return (
-    <div className="flex justify-between items-center py-2 gap-8 border-b border-[#543864]/50">
-      <span className="text-white/70 font-medium">{label}</span>
-      <span className="text-white font-semibold text-right">{value}</span>
     </div>
   );
 }

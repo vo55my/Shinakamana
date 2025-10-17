@@ -16,7 +16,7 @@ export default function ResultInfo({
         </span>{" "}
         of <span className="text-[#FF6363] font-bold">{totalItems}</span> anime
       </div>
-      {extra && <div className="text-white/40 text-xs mt-1">{extra}</div>}
+      {extra && <div className="text-white/40 text-xs mt-1 capitalize">{extra}</div>}
     </div>
   );
 }

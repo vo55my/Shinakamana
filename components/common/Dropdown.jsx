@@ -3,15 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { FiChevronDown, FiCheck } from "react-icons/fi";
 
-/**
- * Dropdown aman untuk SSR (bebas hydration error)
- * @param {Object} props
- * @param {string} props.label - Label dropdown
- * @param {Array<{value: string, label: string}>} props.options - Pilihan dropdown
- * @param {string} props.value - Nilai aktif
- * @param {function} props.onChange - Callback perubahan nilai
- */
-
 export default function Dropdown({ label, options = [], value, onChange }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);

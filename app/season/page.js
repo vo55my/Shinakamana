@@ -3,45 +3,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getSeasonNow, getSeasonUpcoming } from "@/lib/api";
+import { uniqueByMalId } from "@/lib/uniqueHelpers";
+import { filterByBroadcast } from "@/lib/broadcastHelpers";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
 import AnimeCard from "@/components/cards/AnimeCard";
-import Dropdown from "@/components/common/Dropdown";
 import Pagination from "@/components/common/Pagination";
-import EmptyState from "@/components/common/EmptyState";
+import EmptyState from "@/components/state/EmptyState";
 import PageHeader from "@/components/common/PageHeader";
 import InfoSection from "@/components/info/InfoSection";
-import ResultInfo from "@/components/info/ResultInfo";
-import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import ScrollToTopButton from "@/components/buttons/ScrollToTopButton";
 import SSRLoadingFallback from "@/components/common/SSRLoadingFallback";
-import { FiStar, FiCalendar, FiPlay, FiFilter, FiSearch } from "react-icons/fi";
+import SeasonControls from "@/components/section/season/SeasonControls";
+import { FiStar, FiCalendar } from "react-icons/fi";
 
-// helper: hapus duplikat berdasarkan mal_id
-function uniqueByMalId(animeList) {
-  if (!Array.isArray(animeList)) return [];
-  const seen = new Set();
-  return animeList.filter((anime) => {
-    if (!anime?.mal_id || seen.has(anime.mal_id)) return false;
-    seen.add(anime.mal_id);
-    return true;
-  });
-}
-
-// helper: filter broadcast
-function filterByBroadcast(animeList, filterType = "tv") {
-  if (!Array.isArray(animeList)) return [];
-  if (filterType === "movie") return animeList;
-  return animeList.filter((anime) => {
-    const b = anime?.broadcast;
-    if (!b?.string) return false;
-    const str = String(b.string).trim().toLowerCase();
-    if (!str || str === "unknown") return false;
-    if (b.timezone === null) return false;
-    return true;
-  });
-}
-
-export default function SeasonPage() {
+export default function SeasonContent() {
   const router = useRouter();
 
   const [activeSeason, setActiveSeason] = useState("now"); // now | upcoming
@@ -121,6 +97,17 @@ export default function SeasonPage() {
     router.push(`/season/result?season=${season}&year=${year}`);
   };
 
+  // Handle filter changes
+  const handleTypeChange = (val) => {
+    setActiveType(val);
+    setPage(1);
+  };
+
+  const handleSeasonChange = (val) => {
+    setActiveSeason(val);
+    setPage(1);
+  };
+
   // Scroll button
   useEffect(() => {
     let rafId = null;
@@ -147,11 +134,81 @@ export default function SeasonPage() {
     return <SSRLoadingFallback />;
   }
 
+  // Render states
+  const renderContent = () => {
+    // Loading state
+    if (loading) {
+      return (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 animate-pulse">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <AnimeCard key={i} loading />
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    // Error state
+    if (error) {
+      return (
+        <>
+          <EmptyState
+            icon={
+              <FiCalendar className="text-[#FF6363] text-4xl mx-auto mb-4" />
+            }
+            title={error}
+            description="Please try refreshing the page or adjusting your filters"
+          />
+        </>
+      );
+    }
+
+    // Empty state
+    if (filteredData.length === 0) {
+      return (
+        <>
+          <EmptyState
+            icon={
+              <FiCalendar className="text-[#FFBD69] text-4xl mx-auto mb-4" />
+            }
+            title="No anime found for the selected season and filters."
+            description="Try adjusting your filters or search for a different season."
+          />
+        </>
+      );
+    }
+
+    // Success state - menampilkan grid anime
+    return (
+      <>
+        {/* Anime Cards Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+          {filteredData.map((anime) => (
+            <AnimeCard key={anime.mal_id} anime={anime} />
+          ))}
+        </div>
+
+        {/* Pagination */}
+        {pagination && pagination.last_visible_page > 1 && (
+          <div className="flex justify-center mt-12">
+            <Pagination
+              currentPage={page}
+              totalPages={pagination.last_visible_page}
+              onPageChange={setPage}
+              loading={loading}
+            />
+          </div>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
       <Navbar />
 
-      <main className="flex-1 py-20">
+      <main className="flex-1 pt-15">
         {/* Header Section */}
         <PageHeader
           title="ANIME SEASON"
@@ -161,156 +218,28 @@ export default function SeasonPage() {
         />
 
         {/* Controls Section */}
-        <section className="py-8 bg-[#0f0f1f]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
-              {/* Main Filters */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <div className="flex items-center space-x-3">
-                  <FiPlay className="text-[#FFBD69] text-lg" />
-                  <Dropdown
-                    label="TYPE"
-                    options={[
-                      { value: "tv", label: "TV Series" },
-                      { value: "movie", label: "Movies" },
-                    ]}
-                    value={activeType}
-                    onChange={(val) => {
-                      setActiveType(val);
-                      setPage(1);
-                    }}
-                  />
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <FiFilter className="text-[#FF6363] text-lg" />
-                  <Dropdown
-                    label="SEASON"
-                    options={[
-                      { value: "now", label: "Currently Airing" },
-                      { value: "upcoming", label: "Upcoming" },
-                    ]}
-                    value={activeSeason}
-                    onChange={(val) => {
-                      setActiveSeason(val);
-                      setPage(1);
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Results Info */}
-              <ResultInfo
-                startIndex={startIndex}
-                endIndex={endIndex}
-                totalItems={totalItems}
-                extra={`${
-                  activeSeason === "now" ? "Currently Airing" : "Upcoming"
-                } ${activeType.toUpperCase()} Series`}
-              />
-            </div>
-
-            {/* Manual Season Search */}
-            <div className="bg-[#1a1a2f] border border-[#543864] rounded-2xl p-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex items-center space-x-3">
-                  <FiCalendar className="text-[#FFBD69] text-xl" />
-                  <h3 className="text-white font-bold text-lg">
-                    SEARCH SPECIFIC SEASON
-                  </h3>
-                </div>
-
-                <div className="flex flex-wrap sm:flex-row gap-3">
-                  <div className="flex items-center space-x-3">
-                    <Dropdown
-                      label="SEASON"
-                      options={[
-                        { value: "winter", label: "Winter" },
-                        { value: "spring", label: "Spring" },
-                        { value: "summer", label: "Summer" },
-                        { value: "fall", label: "Fall" },
-                      ]}
-                      value={season}
-                      onChange={setSeason}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="number"
-                      min="1917"
-                      max={new Date().getFullYear() + 1}
-                      value={year}
-                      onChange={(e) => setYear(e.target.value)}
-                      className="px-4 py-3 bg-[#1a1a2f] border border-[#543864] text-white rounded-xl focus:outline-none focus:border-[#FF6363] placeholder-white/40 w-32"
-                      placeholder="Year"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleSearchSeason}
-                    className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-[#FF6363] to-[#FFBD69] text-[#0f0f1f] font-bold rounded-xl transition-all duration-300 hover:scale-105 border-2 border-transparent"
-                  >
-                    <FiSearch size={18} />
-                    <span>SEARCH</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <SeasonControls
+          activeType={activeType}
+          activeSeason={activeSeason}
+          onTypeChange={handleTypeChange}
+          onSeasonChange={handleSeasonChange}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          season={season}
+          year={year}
+          onSeasonSelect={setSeason}
+          onYearChange={setYear}
+          onSearchSeason={handleSearchSeason}
+        />
 
         {/* Content Section */}
         <section className="py-8 bg-[#1a1a2f]">
           <div className="container mx-auto px-4 sm:px-6">
-            {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 animate-pulse">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <AnimeCard key={i} loading />
-                ))}
-              </div>
-            ) : error ? (
-              <EmptyState
-                icon={
-                  <FiCalendar className="text-[#FF6363] text-4xl mx-auto mb-4" />
-                }
-                title={error}
-                description="Please try refreshing the page or adjusting your filters"
-              />
-            ) : filteredData.length === 0 ? (
-              <EmptyState
-                icon={
-                  <FiCalendar className="text-[#FFBD69] text-4xl mx-auto mb-4" />
-                }
-                title="No anime found for the selected season and filters."
-                description="Try adjusting your filters or search for a different season."
-              />
-            ) : (
-              <>
-                {/* Anime Cards Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
-                  {filteredData.map((anime) => (
-                    <AnimeCard key={anime.mal_id} anime={anime} />
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {pagination && pagination.last_visible_page > 1 && (
-                  <div className="flex justify-center mt-12">
-                    <Pagination
-                      currentPage={page}
-                      totalPages={pagination.last_visible_page}
-                      onPageChange={setPage}
-                      loading={loading}
-                    />
-                  </div>
-                )}
-              </>
-            )}
+            {renderContent()}
           </div>
         </section>
 
-        {/* Info Section */}
         <InfoSection
           icon={<FiStar className="text-[#FFBD69] text-3xl mx-auto mb-4" />}
           title="SEASONAL ANIME"

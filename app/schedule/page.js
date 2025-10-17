@@ -4,37 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { getSchedules } from "@/lib/api";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
-import AnimeCard from "@/components/cards/AnimeCard";
-import Dropdown from "@/components/common/Dropdown";
-import Pagination from "@/components/common/Pagination";
-import EmptyState from "@/components/common/EmptyState";
 import PageHeader from "@/components/common/PageHeader";
-import InfoSection from "@/components/info/InfoSection";
-import ResultInfo from "@/components/info/ResultInfo";
-import ScrollToTopButton from "@/components/common/ScrollToTopButton";
 import SSRLoadingFallback from "@/components/common/SSRLoadingFallback";
-import { FiCalendar, FiClock, FiTv } from "react-icons/fi";
-
-// Hapus duplikat berdasarkan mal_id
-function uniqueByMalId(animeList) {
-  if (!Array.isArray(animeList)) return [];
-  const seen = new Set();
-  return animeList.filter((anime) => {
-    if (!anime?.mal_id || seen.has(anime.mal_id)) return false;
-    seen.add(anime.mal_id);
-    return true;
-  });
-}
-
-// Filter hanya anime dengan jadwal tayang valid
-function filterByBroadcast(animeList) {
-  if (!Array.isArray(animeList)) return [];
-  return animeList.filter(
-    (anime) =>
-      anime.broadcast?.string &&
-      anime.broadcast.string.toLowerCase() !== "unknown"
-  );
-}
+import InfoSection from "@/components/info/InfoSection";
+import ScrollToTopButton from "@/components/buttons/ScrollToTopButton";
+import ScheduleControls from "@/components/section/schedule/ScheduleControls";
+import ScheduleContent from "@/components/section/schedule/ScheduleContent";
+import { FiCalendar } from "react-icons/fi";
 
 export default function SchedulePage() {
   const [selectedDay, setSelectedDay] = useState("monday");
@@ -88,22 +64,12 @@ export default function SchedulePage() {
     };
   }, [isClient, selectedDay]);
 
-  // Info jumlah data
-  const uniqueData = uniqueByMalId(filterByBroadcast(data));
-  const perPage = pagination?.items?.per_page ?? 25;
-  const startIndex = (page - 1) * perPage + 1;
-  const endIndex = startIndex + uniqueData.length - 1;
   const totalItems = pagination?.items?.total ?? 0;
 
-  // Day mapping untuk display
-  const dayMap = {
-    monday: "Monday",
-    tuesday: "Tuesday",
-    wednesday: "Wednesday",
-    thursday: "Thursday",
-    friday: "Friday",
-    saturday: "Saturday",
-    sunday: "Sunday",
+  // Handler untuk perubahan hari
+  const handleDayChange = (day) => {
+    setSelectedDay(day);
+    setPage(1);
   };
 
   // Scroll button
@@ -135,7 +101,7 @@ export default function SchedulePage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
       <Navbar />
 
-      <main className="flex-1 py-20">
+      <main className="flex-1 pt-15">
         {/* Header Section */}
         <PageHeader
           title="ANIME SCHEDULE"
@@ -145,98 +111,26 @@ export default function SchedulePage() {
         />
 
         {/* Controls Section */}
-        <section className="py-8 bg-[#0f0f1f]">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              {/* Day Selector */}
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="flex items-center space-x-3">
-                  <FiCalendar className="text-[#FFBD69] text-xl" />
-                  <span className="text-white font-semibold text-lg">
-                    {dayMap[selectedDay]}
-                  </span>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <FiTv className="text-[#FF6363] text-lg" />
-                  <Dropdown
-                    label="SELECT DAY"
-                    options={[
-                      { value: "monday", label: "Monday" },
-                      { value: "tuesday", label: "Tuesday" },
-                      { value: "wednesday", label: "Wednesday" },
-                      { value: "thursday", label: "Thursday" },
-                      { value: "friday", label: "Friday" },
-                      { value: "saturday", label: "Saturday" },
-                      { value: "sunday", label: "Sunday" },
-                    ]}
-                    value={selectedDay}
-                    onChange={(val) => {
-                      setSelectedDay(val);
-                      setPage(1);
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Results Info */}
-              <ResultInfo
-                startIndex={startIndex}
-                endIndex={endIndex}
-                totalItems={totalItems}
-                extra={`Airing on ${dayMap[selectedDay]}`}
-              />
-            </div>
-          </div>
-        </section>
+        <ScheduleControls
+          selectedDay={selectedDay}
+          page={page}
+          totalItems={totalItems}
+          dataLength={data.length} // Data length sebelum processing
+          onDayChange={handleDayChange}
+        />
 
         {/* Content Section */}
         <section className="py-8 bg-[#1a1a2f]">
           <div className="container mx-auto px-4 sm:px-6">
-            {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 animate-pulse">
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <AnimeCard key={i} loading />
-                ))}
-              </div>
-            ) : error ? (
-              <EmptyState
-                icon={
-                  <FiClock className="text-[#FF6363] text-4xl mx-auto mb-4" />
-                }
-                title={error}
-                description="Please try refreshing the page or select a different day"
-              />
-            ) : uniqueData.length === 0 ? (
-              <EmptyState
-                icon={
-                  <FiClock className="text-[#FFBD69] text-4xl mx-auto mb-4" />
-                }
-                title={`No anime scheduled for ${dayMap[selectedDay]}.`}
-                description="Try selecting a different day or check back later for updates."
-              />
-            ) : (
-              <>
-                {/* Anime Cards Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
-                  {uniqueData.map((anime) => (
-                    <AnimeCard key={anime.mal_id} anime={anime} />
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {pagination && pagination.last_visible_page > 1 && (
-                  <div className="flex justify-center mt-12">
-                    <Pagination
-                      currentPage={page}
-                      totalPages={pagination.last_visible_page}
-                      onPageChange={setPage}
-                      loading={loading}
-                    />
-                  </div>
-                )}
-              </>
-            )}
+            <ScheduleContent
+              data={data} // Data mentah, diproses di ScheduleContent
+              pagination={pagination}
+              loading={loading}
+              error={error}
+              selectedDay={selectedDay}
+              page={page}
+              onPageChange={setPage}
+            />
           </div>
         </section>
 

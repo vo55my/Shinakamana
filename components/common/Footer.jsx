@@ -31,7 +31,7 @@ export default function Footer() {
 
       <div className="w-full max-w-screen-xl mx-auto p-6 md:py-6">
         {/* Main Content */}
-        <div className="md:flex md:items-center md:justify-between">
+        <div className="md:flex md:items-center md:justify-between md:space-x-6">
           {/* Logo & Brand Section */}
           <div className="flex flex-col items-center md:items-start mb-8 md:mb-0">
             <Link href="/" className="group flex items-center space-x-3 mb-4">

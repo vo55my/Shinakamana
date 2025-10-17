@@ -1,6 +1,5 @@
 import React from "react";
 
-// icon: React element, title: string, subtitle: string, color: tailwind color class
 export default function SectionHeader({
   icon,
   title,

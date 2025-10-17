@@ -8,7 +8,7 @@ import Footer from "@/components/common/Footer";
 import GenreButton from "@/components/buttons/GenreButton";
 import PageHeader from "@/components/common/PageHeader";
 import InfoSection from "@/components/info/InfoSection";
-import ScrollToTopButton from "@/components/common/ScrollToTopButton";
+import ScrollToTopButton from "@/components/buttons/ScrollToTopButton";
 import SSRLoadingFallback from "@/components/common/SSRLoadingFallback";
 import { FiTag, FiGrid } from "react-icons/fi";
 
@@ -88,7 +88,7 @@ export default function GenrePage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
       <Navbar />
 
-      <main className="flex-1 py-20">
+      <main className="flex-1 pt-15">
         {/* Header Section */}
         <PageHeader
           title="BROWSE GENRES"

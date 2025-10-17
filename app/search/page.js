@@ -1,25 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAnimeGenres } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/common/Navbar";
 import Footer from "@/components/common/Footer";
-import Dropdown from "@/components/common/Dropdown";
 import Search from "@/components/common/Search";
-import EmptyState from "@/components/common/EmptyState";
 import PageHeader from "@/components/common/PageHeader";
-import InfoSection from "@/components/info/InfoSection";
-import ScrollToTopButton from "@/components/common/ScrollToTopButton";
 import SSRLoadingFallback from "@/components/common/SSRLoadingFallback";
-import {
-  FiSearch,
-  FiFilter,
-  FiCalendar,
-  FiStar,
-  FiTag,
-  FiPlay,
-} from "react-icons/fi";
+import InfoSection from "@/components/info/InfoSection";
+import ScrollToTopButton from "@/components/buttons/ScrollToTopButton";
+import SearchFilters from "@/components/section/search/SearchFilters";
+import { FiSearch } from "react-icons/fi";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -30,7 +21,6 @@ export default function SearchPage() {
   const [rating, setRating] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [genres, setGenres] = useState([]);
   const [genreInclude, setGenreInclude] = useState("");
   const [genreExclude, setGenreExclude] = useState("");
   const [isClient, setIsClient] = useState(false);
@@ -54,42 +44,6 @@ export default function SearchPage() {
     setEndDate(params.get("end_date") || "");
     setGenreInclude(params.get("genres") || "");
     setGenreExclude(params.get("genres_exclude") || "");
-  }, [isClient]);
-
-  // Fetch genres aman
-  useEffect(() => {
-    if (!isClient) return;
-
-    let cancelled = false;
-    async function fetchGenres() {
-      try {
-        const res = await getAnimeGenres();
-        const data = res?.data;
-
-        let combined = [];
-        if (Array.isArray(data)) {
-          combined = data;
-        } else if (typeof data === "object") {
-          // Gabungkan semua kategori genre menjadi satu array
-          combined = [
-            ...(data.genres ?? []),
-            ...(data.explicit_genres ?? []),
-            ...(data.themes ?? []),
-            ...(data.demographics ?? []),
-          ];
-        }
-
-        if (!cancelled) setGenres(combined);
-      } catch (err) {
-        console.error("Failed to fetch genres:", err);
-        if (!cancelled) setGenres([]);
-      }
-    }
-
-    fetchGenres();
-    return () => {
-      cancelled = true;
-    };
   }, [isClient]);
 
   const handleSearch = (q = keyword) => {
@@ -149,7 +103,7 @@ export default function SearchPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
       <Navbar />
 
-      <main className="flex-1 py-20">
+      <main className="flex-1 pt-15">
         {/* Header Section */}
         <PageHeader
           title="SEARCH ANIME"
@@ -163,166 +117,34 @@ export default function SearchPage() {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto">
               {/* Search Bar */}
-              <div className="mb-8">
-                <Search
-                  initialValue={keyword}
-                  onSearch={(q) => {
-                    setKeyword(q);
-                    handleSearch(q);
-                  }}
-                />
-              </div>
+              <Search
+                initialValue={keyword}
+                onSearch={(q) => {
+                  setKeyword(q);
+                  handleSearch(q);
+                }}
+              />
 
-              {/* Filters Grid */}
-              <div className="bg-[#1a1a2f] border border-[#543864] rounded-2xl p-6">
-                <div className="flex items-center space-x-3 mb-6">
-                  <FiFilter className="text-[#FF6363] text-xl" />
-                  <h3 className="text-white font-bold text-lg">FILTERS</h3>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Type & Status Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center space-x-3">
-                      <FiPlay className="text-[#FFBD69] text-lg" />
-                      <Dropdown
-                        label="TYPE"
-                        options={[
-                          { value: "", label: "All Types" },
-                          { value: "tv", label: "TV Series" },
-                          { value: "movie", label: "Movies" },
-                          { value: "ova", label: "OVA" },
-                          { value: "ona", label: "ONA" },
-                          { value: "special", label: "Special" },
-                        ]}
-                        value={type}
-                        onChange={setType}
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <FiCalendar className="text-[#FF6363] text-lg" />
-                      <Dropdown
-                        label="STATUS"
-                        options={[
-                          { value: "", label: "All Status" },
-                          { value: "airing", label: "Currently Airing" },
-                          { value: "complete", label: "Completed" },
-                          { value: "upcoming", label: "Upcoming" },
-                        ]}
-                        value={status}
-                        onChange={setStatus}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Rating Row */}
-                  <div className="flex items-center space-x-3">
-                    <FiStar className="text-[#FFBD69] text-lg" />
-                    <Dropdown
-                      label="RATING"
-                      options={[
-                        { value: "", label: "All Ratings" },
-                        { value: "g", label: "G - All Ages" },
-                        { value: "pg", label: "PG - Children" },
-                        { value: "pg13", label: "PG-13 - Teens 13+" },
-                        {
-                          value: "r17",
-                          label: "R - 17+ (violence & profanity)",
-                        },
-                        { value: "r", label: "R+ - Mild Nudity" },
-                        { value: "rx", label: "Rx - Hentai" },
-                      ]}
-                      value={rating}
-                      onChange={setRating}
-                    />
-                  </div>
-
-                  {/* Genre Filters Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center space-x-3">
-                      <FiTag className="text-[#FF6363] text-lg" />
-                      <Dropdown
-                        label="INCLUDE GENRES"
-                        options={[
-                          { value: "", label: "All Genres" },
-                          ...genres.map((g) => ({
-                            value: g.mal_id?.toString() ?? "",
-                            label: g.name ?? "Unknown",
-                          })),
-                        ]}
-                        value={genreInclude}
-                        onChange={setGenreInclude}
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      <FiTag className="text-[#FFBD69] text-lg" />
-                      <Dropdown
-                        label="EXCLUDE GENRES"
-                        options={[
-                          { value: "", label: "No Exclusions" },
-                          ...genres.map((g) => ({
-                            value: g.mal_id?.toString() ?? "",
-                            label: g.name ?? "Unknown",
-                          })),
-                        ]}
-                        value={genreExclude}
-                        onChange={setGenreExclude}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Date Filters Row */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex flex-col space-y-2">
-                      <label className="text-white/70 text-sm font-medium uppercase">
-                        Start Date
-                      </label>
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#1a1a2f] border border-[#543864] text-white rounded-xl focus:outline-none focus:border-[#FF6363]"
-                      />
-                    </div>
-                    <div className="flex flex-col space-y-2">
-                      <label className="text-white/70 text-sm font-medium uppercase">
-                        End Date
-                      </label>
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-4 py-3 bg-[#1a1a2f] border border-[#543864] text-white rounded-xl focus:outline-none focus:border-[#FF6363]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Search Button */}
-                  <button
-                    onClick={() => handleSearch()}
-                    disabled={isDisabled}
-                    className={`w-full flex items-center justify-center space-x-2 px-6 py-4 font-bold rounded-xl transition-all duration-300 border-2 ${
-                      isDisabled
-                        ? "bg-gray-600 text-gray-400 border-gray-600 cursor-not-allowed"
-                        : "bg-gradient-to-r from-[#FF6363] to-[#FFBD69] text-[#0f0f1f] border-transparent hover:scale-105"
-                    }`}
-                  >
-                    <FiSearch size={20} />
-                    <span>SEARCH ANIME</span>
-                  </button>
-                  {isDisabled && (
-                    <EmptyState
-                      icon={
-                        <FiSearch className="text-[#FFBD69] text-4xl mx-auto mb-4" />
-                      }
-                      title="Please enter keywords or filters to search for anime."
-                      description="Use the filters above to find your favorite anime with detailed options."
-                    />
-                  )}
-                </div>
-              </div>
+              {/* Filters Component */}
+              <SearchFilters
+                keyword={keyword}
+                type={type}
+                status={status}
+                rating={rating}
+                startDate={startDate}
+                endDate={endDate}
+                genreInclude={genreInclude}
+                genreExclude={genreExclude}
+                onTypeChange={setType}
+                onStatusChange={setStatus}
+                onRatingChange={setRating}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+                onGenreIncludeChange={setGenreInclude}
+                onGenreExcludeChange={setGenreExclude}
+                onSearch={() => handleSearch()}
+                isDisabled={isDisabled}
+              />
             </div>
           </div>
         </section>
