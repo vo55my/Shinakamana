@@ -15,7 +15,7 @@ export default function PlaylistGrid({ playlist, onDeleteAnime }) {
           {/* Delete Button Overlay */}
           <button
             onClick={() => onDeleteAnime(anime)}
-            className="absolute top-3 right-3 z-10 p-2 bg-[#FF6363] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110"
+            className="absolute top-3 right-25 z-10 p-2 bg-[#FF6363] text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110"
             aria-label={`Remove ${anime.title} from playlist`}
           >
             <FiTrash2 className="text-sm" />

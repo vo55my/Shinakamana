@@ -22,7 +22,7 @@ export default function PlaylistEmptyState() {
             <span>Browse Genres</span>
           </Link>
           <Link
-            href="/top"
+            href="/popular"
             className="inline-flex items-center space-x-2 px-6 py-3 bg-[#543864] text-white rounded-lg hover:bg-[#4a3157] transition-colors duration-300"
           >
             <FiStar className="text-sm" />
