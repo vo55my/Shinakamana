@@ -12,8 +12,23 @@ import ScheduleControls from "@/components/section/schedule/ScheduleControls";
 import ScheduleContent from "@/components/section/schedule/ScheduleContent";
 import { FiCalendar } from "react-icons/fi";
 
+// Fungsi untuk mendapatkan hari ini dalam format yang sesuai
+const getToday = () => {
+  const days = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
+  const todayIndex = new Date().getDay(); // 0 = Sunday, 1 = Monday, dst.
+  return days[todayIndex];
+};
+
 export default function SchedulePage() {
-  const [selectedDay, setSelectedDay] = useState("monday");
+  const [selectedDay, setSelectedDay] = useState(getToday()); // Set default ke hari ini
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

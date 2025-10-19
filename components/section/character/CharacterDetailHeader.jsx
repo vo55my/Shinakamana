@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FiArrowLeft } from "react-icons/fi";
 
-export default function AnimeDetailHeader({ anime }) {
+export default function CharacterDetailHeader({ character }) {
   const router = useRouter();
 
   return (
@@ -19,7 +19,7 @@ export default function AnimeDetailHeader({ anime }) {
           </button>
           <div className="flex-1">
             <h1 className="text-md sm:text-3xl font-black text-white">
-              {anime?.title ?? "ANIME DETAILS"}
+              {character?.name ?? "CHARACTER DETAILS"}
             </h1>
           </div>
         </div>

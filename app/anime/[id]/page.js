@@ -260,7 +260,7 @@ export default function AnimeDetailPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#0f0f1f] to-[#1a1a2f]">
       <Navbar />
 
-      <main className="flex-1 py-20">
+      <main className="flex-1 pt-15">
         {/* Header */}
         <AnimeDetailHeader anime={anime} />
 
