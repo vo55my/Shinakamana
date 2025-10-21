@@ -3,14 +3,13 @@
 import { useState, useEffect } from "react";
 import { getAnimeGenres } from "@/lib/api";
 import Dropdown from "@/components/common/Dropdown";
-import EmptyState from "@/components/state/EmptyState";
-import { FiFilter, FiPlay, FiCalendar, FiStar, FiTag, FiSearch } from "react-icons/fi";
+import { FiFilter, FiPlay, FiCalendar, FiStar, FiTag } from "react-icons/fi";
 
 export default function SearchFilters({
   keyword,
   type,
   status,
-  rating,
+  rating, 
   startDate,
   endDate,
   genreInclude,
@@ -22,8 +21,6 @@ export default function SearchFilters({
   onEndDateChange,
   onGenreIncludeChange,
   onGenreExcludeChange,
-  onSearch,
-  isDisabled,
 }) {
   const [genres, setGenres] = useState([]);
   const [isClient, setIsClient] = useState(false);
@@ -203,28 +200,13 @@ export default function SearchFilters({
                 </div>
               </div>
 
-              {/* Search Button */}
-              <button
-                onClick={onSearch}
-                disabled={isDisabled}
-                className={`w-full flex items-center justify-center space-x-2 px-6 py-4 font-bold rounded-xl transition-all duration-300 border-2 ${
-                  isDisabled
-                    ? "bg-gray-600 text-gray-400 border-gray-600 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#FF6363] to-[#FFBD69] text-[#0f0f1f] border-transparent hover:scale-105"
-                }`}
-              >
-                <FiSearch size={20} />
-                <span>SEARCH ANIME</span>
-              </button>
-              {isDisabled && (
-                <EmptyState
-                  icon={
-                    <FiSearch className="text-[#FFBD69] text-4xl mx-auto mb-4" />
-                  }
-                  title="Please enter keywords or filters to search for anime."
-                  description="Use the filters above to find your favorite anime with detailed options."
-                />
-              )}
+              {/* Info Text */}
+              <div className="text-center p-4 bg-[#0f0f1f] rounded-xl border border-[#543864]">
+                <p className="text-white/70 text-sm">
+                  <strong>Tip:</strong> Click the search button above to apply
+                  your filters. You can search with keywords, filters, or both!
+                </p>
+              </div>
             </div>
           </div>
         </div>

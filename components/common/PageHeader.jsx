@@ -11,18 +11,15 @@ export default function PageHeader({
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex flex-col items-center text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div
-              className="w-3 h-3"
-              style={{ background: color, borderRadius: "9999px" }}
-            ></div>
             {icon}
-            <h1 className="text-xl sm:text-4xl md:text-5xl font-black text-white tracking-wide">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-wide">
               {title}
             </h1>
-            <div className="w-3 h-3 bg-[#FFBD69] rounded-full"></div>
           </div>
           {subtitle && (
-            <p className="text-white/70 text-lg max-w-2xl capitalize">{subtitle}</p>
+            <p className="text-white/70 text-lg max-w-2xl capitalize">
+              {subtitle}
+            </p>
           )}
         </div>
       </div>

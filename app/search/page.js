@@ -16,6 +16,7 @@ export default function SearchPage() {
   const router = useRouter();
 
   const [keyword, setKeyword] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // State terpisah untuk input search
   const [type, setType] = useState("");
   const [status, setStatus] = useState("");
   const [rating, setRating] = useState("");
@@ -36,7 +37,9 @@ export default function SearchPage() {
     if (!isClient) return;
 
     const params = new URLSearchParams(window.location.search);
-    setKeyword(params.get("q") || "");
+    const urlKeyword = params.get("q") || "";
+    setKeyword(urlKeyword);
+    setSearchInput(urlKeyword); // Juga set searchInput
     setType(params.get("type") || "");
     setStatus(params.get("status") || "");
     setRating(params.get("rating") || "");
@@ -46,11 +49,17 @@ export default function SearchPage() {
     setGenreExclude(params.get("genres_exclude") || "");
   }, [isClient]);
 
-  const handleSearch = (q = keyword) => {
+  const handleSearch = (searchKeyword = searchInput) => {
     if (!isClient) return;
 
     const params = new URLSearchParams();
-    if (q) params.append("q", q);
+
+    // SELALU masukkan searchInput ke parameter jika ada
+    if (searchKeyword && searchKeyword.trim()) {
+      params.append("q", searchKeyword.trim());
+    }
+
+    // Parameter filter lainnya
     if (type) params.append("type", type);
     if (status) params.append("status", status);
     if (rating) params.append("rating", rating);
@@ -59,19 +68,12 @@ export default function SearchPage() {
     if (genreInclude) params.append("genres", genreInclude);
     if (genreExclude) params.append("genres_exclude", genreExclude);
 
-    if (!params.toString()) return;
-    router.push(`/search/result?${params.toString()}`);
+    // PERUBAHAN: Biarkan search tetap berjalan meskipun hanya ada filter
+    // Jika ada setidaknya satu parameter (keyword atau filter), lakukan search
+    if (params.toString() !== "") {
+      router.push(`/search/result?${params.toString()}`);
+    }
   };
-
-  const isDisabled =
-    !keyword &&
-    !type &&
-    !status &&
-    !rating &&
-    !startDate &&
-    !endDate &&
-    !genreInclude &&
-    !genreExclude;
 
   // Scroll button
   useEffect(() => {
@@ -116,18 +118,15 @@ export default function SearchPage() {
         <section className="py-8 bg-[#0f0f1f]">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto">
-              {/* Search Bar */}
+              {/* Search Bar - Sekarang langsung trigger search dengan semua filter */}
               <Search
-                initialValue={keyword}
-                onSearch={(q) => {
-                  setKeyword(q);
-                  handleSearch(q);
-                }}
+                initialValue={searchInput}
+                onSearch={handleSearch} // Langsung trigger search dengan semua filter
               />
 
-              {/* Filters Component */}
+              {/* Filters Component - Tanpa tombol search */}
               <SearchFilters
-                keyword={keyword}
+                keyword={searchInput}
                 type={type}
                 status={status}
                 rating={rating}
@@ -142,8 +141,7 @@ export default function SearchPage() {
                 onEndDateChange={setEndDate}
                 onGenreIncludeChange={setGenreInclude}
                 onGenreExcludeChange={setGenreExclude}
-                onSearch={() => handleSearch()}
-                isDisabled={isDisabled}
+                // onSearch prop dihapus karena tidak ada tombol lagi
               />
             </div>
           </div>

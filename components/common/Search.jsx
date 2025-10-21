@@ -17,7 +17,9 @@ export default function Search({ onSearch, initialValue = "" }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = query.trim();
-    if (trimmed && onSearch) onSearch(trimmed);
+    // PERUBAHAN: Selalu panggil onSearch meskipun query kosong
+    // Biarkan parent component yang menentukan logika
+    if (onSearch) onSearch(trimmed);
   };
 
   const handleClear = () => {
@@ -44,7 +46,7 @@ export default function Search({ onSearch, initialValue = "" }) {
       {/* Input pencarian */}
       <input
         type="search"
-        placeholder="Search anime..."
+        placeholder="Search anime or use filters below..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setIsFocused(true)}
